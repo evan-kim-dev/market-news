@@ -104,8 +104,8 @@ export const fetchAndSummarize = action({
           });
           const naverData = await naverRes.json();
           if (naverData.items) {
-            // 보수/우편향 언론사 필터링 (조중동, 한경, 매경 등)
-            const rightLeaningDomains = ["chosun", "joongang", "donga", "hankyung", "mk.co.kr", "munhwa", "segye", "kmib"];
+            // 보수/우편향 언론사 필터링 (조중동, 한경, 매경 등 + 매일신문)
+            const rightLeaningDomains = ["chosun", "joongang", "donga", "hankyung", "mk.co.kr", "munhwa", "segye", "kmib", "imaeil"];
             
             const filteredItems = naverData.items.filter((item: any) => {
               const url = item.originallink || item.link;
@@ -140,6 +140,7 @@ export const fetchAndSummarize = action({
               else if (url.includes("munhwa")) sourceName = "문화일보";
               else if (url.includes("segye")) sourceName = "세계일보";
               else if (url.includes("kmib")) sourceName = "국민일보";
+              else if (url.includes("imaeil")) sourceName = "매일신문";
 
               news.push({
                 category: "KR",
