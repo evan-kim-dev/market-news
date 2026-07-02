@@ -63,7 +63,7 @@ export const fetchAndSummarize = action({
     for (const feedObj of rssFeeds) {
       try {
         const feed = await parser.parseURL(feedObj.url);
-        const items = feed.items.slice(0, 5); // 5 per feed = 15 total
+        const items = feed.items.slice(0, 9); // Fetch 9 per feed
         for (const item of items) {
           let image_url = undefined;
           if (item.media && item.media.$ && item.media.$.url) {
@@ -112,8 +112,8 @@ export const fetchAndSummarize = action({
               return rightLeaningDomains.some(domain => url.includes(domain));
             });
 
-            // 필터링된 기사가 너무 적으면 일반 기사 포함, 최대 5개 선택
-            const finalItems = filteredItems.length >= 3 ? filteredItems.slice(0, 5) : naverData.items.slice(0, 5);
+            // 필터링된 기사가 너무 적으면 일반 기사 포함, 최대 9개 선택
+            const finalItems = filteredItems.length >= 3 ? filteredItems.slice(0, 9) : naverData.items.slice(0, 9);
 
             await Promise.all(finalItems.map(async (item: any) => {
               const title = item.title.replace(/<[^>]*>?/g, '').replace(/&quot;/g, '"');

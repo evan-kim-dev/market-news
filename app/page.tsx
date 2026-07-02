@@ -160,7 +160,7 @@ function NewsFeed({ sessionType, title, categories }: { sessionType: string, tit
         <div className="text-neutral-500">해당 카테고리의 뉴스 데이터가 없습니다.</div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {filteredNews.slice(0, 6).map((n: any) => (
+          {filteredNews.slice(0, 9).map((n: any) => (
             <a
               key={n._id}
               href={n.origin_url}
