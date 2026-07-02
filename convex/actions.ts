@@ -72,7 +72,7 @@ export const fetchAndSummarize = action({
             image_url = item.enclosure.url;
           }
           news.push({
-            category: "US",
+            category: "GLOBAL",
             title: item.title || "No Title",
             origin_url: item.link || feedObj.url,
             source: feedObj.source,
