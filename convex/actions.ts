@@ -55,15 +55,15 @@ export const fetchAndSummarize = action({
       }
     });
     const rssFeeds = [
-      { url: "https://finance.yahoo.com/news/rss", source: "Yahoo Finance", sub_category: "World" },
-      { url: "https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml", source: "WSJ Business", sub_category: "General" },
-      { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", source: "WSJ", sub_category: "Economy" },
+      { url: "http://feeds.foxnews.com/foxnews/politics", source: "Fox News", sub_category: "정치" },
+      { url: "https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml", source: "WSJ Business", sub_category: "경제" },
+      { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", source: "WSJ Markets", sub_category: "경제" },
     ];
     const usNewsTitles: string[] = [];
     for (const feedObj of rssFeeds) {
       try {
         const feed = await parser.parseURL(feedObj.url);
-        const items = feed.items.slice(0, 9); // Fetch 9 per feed
+        const items = feed.items.slice(0, 5); // Fetch 5 per feed (total 15)
         for (const item of items) {
           let image_url = undefined;
           if (item.media && item.media.$ && item.media.$.url) {
@@ -93,10 +93,10 @@ export const fetchAndSummarize = action({
     const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
     
     if (NAVER_CLIENT_ID && NAVER_CLIENT_SECRET) {
-      const krCategories = ["정치", "경제", "사회", "IT과학"];
+      const krCategories = ["정치", "경제"];
       for (const cat of krCategories) {
         try {
-          const naverRes = await fetch(`https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(cat + " 뉴스")}&display=30&sort=sim`, {
+          const naverRes = await fetch(`https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(cat + " 뉴스")}&display=100&sort=sim`, {
             headers: {
               "X-Naver-Client-Id": NAVER_CLIENT_ID,
               "X-Naver-Client-Secret": NAVER_CLIENT_SECRET
@@ -112,8 +112,8 @@ export const fetchAndSummarize = action({
               return rightLeaningDomains.some(domain => url.includes(domain));
             });
 
-            // 필터링된 기사가 너무 적으면 일반 기사 포함, 최대 9개 선택
-            const finalItems = filteredItems.length >= 3 ? filteredItems.slice(0, 9) : naverData.items.slice(0, 9);
+            // 필터링된 기사가 너무 적으면 일반 기사 포함, 최대 15개 선택
+            const finalItems = filteredItems.length >= 5 ? filteredItems.slice(0, 15) : naverData.items.slice(0, 15);
 
             await Promise.all(finalItems.map(async (item: any) => {
               const title = item.title.replace(/<[^>]*>?/g, '').replace(/&quot;/g, '"');
@@ -167,7 +167,8 @@ export const fetchAndSummarize = action({
     
     if (allTitles.length > 0) {
       try {
-        const prompt = `You are a top-tier financial analyst. Read the following global news headlines (US and KR) and provide a comprehensive 3-sentence summary of the overall global market trend.
+        const prompt = `You are a top-tier financial analyst. Read the following global news headlines and provide a comprehensive 3-sentence summary of the overall global market trend.
+CRITICAL: You MUST base your summary ONLY on the provided headlines. DO NOT hallucinate past events (like the early 2025 DeepSeek shock) unless explicitly mentioned in the headlines. The current date is July 2026.
 Also provide 3 to 5 key takeaway keywords (hashtags).
 Return ONLY valid JSON in this exact format, with no markdown formatting or extra text:
 {
@@ -178,7 +179,7 @@ Return ONLY valid JSON in this exact format, with no markdown formatting or extr
 Headlines:
 ${allTitles.join("\n")}
 `;
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -9,6 +9,7 @@
  */
 
 import type * as actions from "../actions.js";
+import type * as chat from "../chat.js";
 import type * as crons from "../crons.js";
 import type * as news from "../news.js";
 
@@ -20,6 +21,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
+  chat: typeof chat;
   crons: typeof crons;
   news: typeof news;
 }>;
