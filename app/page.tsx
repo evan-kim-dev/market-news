@@ -251,7 +251,7 @@ export default function MarketCommandCenter() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-4">
           <NewsFeed 
             sessionType="GLOBAL" 
-            title="해외 마켓 주요 뉴스" 
+            title="해외 주요 뉴스" 
             categories={[
               {label: "전체", value: "전체"}, 
               {label: "국제", value: "World"}, 
@@ -261,7 +261,7 @@ export default function MarketCommandCenter() {
           />
           <NewsFeed 
             sessionType="KR" 
-            title="국내 마켓 주요 뉴스" 
+            title="국내 주요 뉴스" 
             categories={[
               {label: "전체", value: "전체"}, 
               {label: "정치", value: "정치"}, 
