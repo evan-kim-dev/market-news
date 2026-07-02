@@ -3,7 +3,7 @@
 import { useState, useEffect, memo } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { TickerTape, AdvancedRealTimeChart, EconomicCalendar, Timeline } from "react-ts-tradingview-widgets";
+import { TickerTape, AdvancedRealTimeChart, EconomicCalendar, Timeline, StockHeatmap } from "react-ts-tradingview-widgets";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "next-themes";
 
@@ -12,6 +12,7 @@ const MemoizedTickerTape = memo(TickerTape);
 const MemoizedAdvancedChart = memo(AdvancedRealTimeChart);
 const MemoizedEconomicCalendar = memo(EconomicCalendar);
 const MemoizedTimeline = memo(Timeline);
+const MemoizedStockHeatmap = memo(StockHeatmap);
 
 const US_SYMBOLS = [
   { proName: "FOREXCOM:SPXUSD", title: "S&P 500" },
@@ -291,13 +292,16 @@ export default function MarketCommandCenter() {
           <RefreshButton />
         </div>
 
-        {/* Top: Indices & Chart */}
+        {/* Top: Indices & Chart & Heatmap */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <section className="lg:col-span-4 flex flex-col gap-4">
+          <section className="lg:col-span-3 flex flex-col gap-4">
             <MarketIndices />
           </section>
-          <section className="lg:col-span-8 h-[380px] lg:h-auto rounded-2xl overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm transition-colors duration-300">
+          <section className="lg:col-span-5 h-[380px] lg:h-auto rounded-2xl overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm transition-colors duration-300">
             {mounted && <MemoizedAdvancedChart theme={tvTheme} symbol="NASDAQ:IXIC" autosize />}
+          </section>
+          <section className="lg:col-span-4 h-[380px] lg:h-auto rounded-2xl overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm transition-colors duration-300">
+            {mounted && <MemoizedStockHeatmap colorTheme={tvTheme} height="100%" width="100%" hasTopBar={false} />}
           </section>
         </div>
 
