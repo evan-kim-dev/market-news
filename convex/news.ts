@@ -58,6 +58,7 @@ export const saveMarketData = internalMutation({
         session_type: v.string(),
         ai_summary: v.string(),
         key_takeaways: v.array(v.string()),
+        timestamp: v.optional(v.string()),
       })
     ),
   },

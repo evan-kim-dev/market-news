@@ -240,18 +240,18 @@ export default function MarketCommandCenter() {
             <GlobalAIBriefing />
           </section>
           <section className="lg:col-span-1 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden h-[350px]">
-            <MemoizedEconomicCalendar colorTheme="dark" width="100%" height="100%" isTransparent={true} />
+            <MemoizedEconomicCalendar colorTheme="dark" locale="kr" width="100%" height="100%" isTransparent={true} />
           </section>
           <section className="lg:col-span-1 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden h-[350px]">
-            <MemoizedTimeline colorTheme="dark" displayMode="compact" width="100%" height="100%" isTransparent={true} />
+            <MemoizedTimeline colorTheme="dark" locale="kr" displayMode="compact" width="100%" height="100%" isTransparent={true} />
           </section>
         </div>
 
         {/* Bottom: US News & KR News */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-2">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-4">
           <NewsFeed 
-            sessionType="US" 
-            title="🇺🇸 미국 증시" 
+            sessionType="GLOBAL" 
+            title="해외 마켓 주요 뉴스" 
             categories={[
               {label: "전체", value: "전체"}, 
               {label: "국제", value: "World"}, 
@@ -261,7 +261,7 @@ export default function MarketCommandCenter() {
           />
           <NewsFeed 
             sessionType="KR" 
-            title="🇰🇷 한국 증시" 
+            title="국내 마켓 주요 뉴스" 
             categories={[
               {label: "전체", value: "전체"}, 
               {label: "정치", value: "정치"}, 

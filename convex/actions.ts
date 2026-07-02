@@ -56,7 +56,7 @@ export const fetchAndSummarize = action({
     });
     const rssFeeds = [
       { url: "https://finance.yahoo.com/news/rss", source: "Yahoo Finance", sub_category: "World" },
-      { url: "https://search.cnbc.com/rs/search/combinedcms/view.xml?profile=120000000&id=100003114", source: "CNBC", sub_category: "General" },
+      { url: "https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml", source: "WSJ Business", sub_category: "General" },
       { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", source: "WSJ", sub_category: "Economy" },
     ];
     const usNewsTitles: string[] = [];

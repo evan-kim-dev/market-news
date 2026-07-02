@@ -14,6 +14,7 @@ export default defineSchema({
     session_type: v.string(), // "US" or "KR"
     ai_summary: v.string(),
     key_takeaways: v.array(v.string()),
+    timestamp: v.optional(v.string()),
   }),
   original_news: defineTable({
     category: v.string(), // "US" or "KR"
