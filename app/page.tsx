@@ -3,12 +3,13 @@
 import { useState, useEffect, memo } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { TickerTape, AdvancedRealTimeChart, EconomicCalendar } from "react-ts-tradingview-widgets";
+import { TickerTape, AdvancedRealTimeChart, EconomicCalendar, Timeline } from "react-ts-tradingview-widgets";
 
 // Memoize TradingView widgets so they never re-render unless keys change
 const MemoizedTickerTape = memo(TickerTape);
 const MemoizedAdvancedChart = memo(AdvancedRealTimeChart);
 const MemoizedEconomicCalendar = memo(EconomicCalendar);
+const MemoizedTimeline = memo(Timeline);
 
 const US_SYMBOLS = [
   { proName: "FOREXCOM:SPXUSD", title: "S&P 500" },
@@ -233,13 +234,16 @@ export default function MarketCommandCenter() {
           </section>
         </div>
 
-        {/* Middle: Global AI & Economic Calendar */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-2">
-          <section>
+        {/* Middle: Global AI, Economic Calendar & Global Community */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-2">
+          <section className="lg:col-span-1">
             <GlobalAIBriefing />
           </section>
-          <section className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden h-[300px]">
+          <section className="lg:col-span-1 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden h-[350px]">
             <MemoizedEconomicCalendar colorTheme="dark" width="100%" height="100%" isTransparent={true} />
+          </section>
+          <section className="lg:col-span-1 bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden h-[350px]">
+            <MemoizedTimeline colorTheme="dark" displayMode="compact" width="100%" height="100%" isTransparent={true} />
           </section>
         </div>
 
