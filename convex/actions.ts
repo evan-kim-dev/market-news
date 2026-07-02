@@ -3,7 +3,6 @@
 import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import Parser from "rss-parser";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const fetchAndSummarize = action({
   args: {},
@@ -97,7 +96,7 @@ export const fetchAndSummarize = action({
       const krCategories = ["정치", "경제", "사회", "IT과학"];
       for (const cat of krCategories) {
         try {
-          const naverRes = await fetch(`https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(cat + " 뉴스")}&display=5&sort=sim`, {
+          const naverRes = await fetch(`https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(cat + " 뉴스")}&display=30&sort=sim`, {
             headers: {
               "X-Naver-Client-Id": NAVER_CLIENT_ID,
               "X-Naver-Client-Secret": NAVER_CLIENT_SECRET
@@ -105,7 +104,18 @@ export const fetchAndSummarize = action({
           });
           const naverData = await naverRes.json();
           if (naverData.items) {
-            await Promise.all(naverData.items.map(async (item: any) => {
+            // 보수/우편향 언론사 필터링 (조중동, 한경, 매경 등)
+            const rightLeaningDomains = ["chosun", "joongang", "donga", "hankyung", "mk.co.kr", "munhwa", "segye", "kmib"];
+            
+            const filteredItems = naverData.items.filter((item: any) => {
+              const url = item.originallink || item.link;
+              return rightLeaningDomains.some(domain => url.includes(domain));
+            });
+
+            // 필터링된 기사가 너무 적으면 일반 기사 포함, 최대 5개 선택
+            const finalItems = filteredItems.length >= 3 ? filteredItems.slice(0, 5) : naverData.items.slice(0, 5);
+
+            await Promise.all(finalItems.map(async (item: any) => {
               const title = item.title.replace(/<[^>]*>?/g, '').replace(/&quot;/g, '"');
               let image_url = undefined;
               try {
@@ -118,11 +128,24 @@ export const fetchAndSummarize = action({
               } catch (e) {
                 // Ignore silent timeouts
               }
+
+              // 출처 추출
+              let sourceName = "Naver News";
+              const url = item.originallink || item.link;
+              if (url.includes("chosun")) sourceName = "조선일보";
+              else if (url.includes("joongang")) sourceName = "중앙일보";
+              else if (url.includes("donga")) sourceName = "동아일보";
+              else if (url.includes("hankyung")) sourceName = "한국경제";
+              else if (url.includes("mk.co.kr")) sourceName = "매일경제";
+              else if (url.includes("munhwa")) sourceName = "문화일보";
+              else if (url.includes("segye")) sourceName = "세계일보";
+              else if (url.includes("kmib")) sourceName = "국민일보";
+
               news.push({
                 category: "KR",
                 title: title,
                 origin_url: item.link,
-                source: "Naver News",
+                source: sourceName,
                 timestamp: new Date(item.pubDate).toISOString(),
                 image_url,
                 sub_category: cat,
@@ -138,13 +161,47 @@ export const fetchAndSummarize = action({
       console.warn("Naver API keys missing");
     }
 
+    // --- 4. Generate Global AI Summary (Gemini) ---
+    const allTitles = [...usNewsTitles, ...krNewsTitles];
+    
+    if (allTitles.length > 0) {
+      try {
+        const prompt = `You are a top-tier financial analyst. Read the following global news headlines (US and KR) and provide a comprehensive 3-sentence summary of the overall global market trend.
+Also provide 3 to 5 key takeaway keywords (hashtags).
+Return ONLY valid JSON in this exact format, with no markdown formatting or extra text:
+{
+  "summary": "3-sentence global market summary in Korean.",
+  "keywords": ["#keyword1", "#keyword2", "#keyword3"]
+}
+
+Headlines:
+${allTitles.join("\n")}
+`;
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+
+        if (geminiRes.ok) {
+          const geminiData = await geminiRes.json();
+          const rawText = geminiData.candidates[0].content.parts[0].text;
+          const cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleanText);
+
+          briefings.push({
+            session_type: "GLOBAL",
+            ai_summary: parsed.summary,
+            key_takeaways: parsed.keywords,
+            timestamp: new Date().toISOString(),
           });
         }
       } catch (e) {
-        console.error("Gemini KR Error:", e);
+        console.error("Gemini Global Error:", e);
       }
-    } else {
-      console.warn("Gemini API key missing");
     }
 
     // --- 5. Save Data ---
