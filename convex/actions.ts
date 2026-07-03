@@ -4,21 +4,57 @@ import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import Parser from "rss-parser";
 
-/** Fetch og:image from article page (best-effort, 3-second timeout) */
+/** Blocklist of domains that return generic/logo images instead of article thumbnails */
+const OG_BLOCKLIST = [
+  "google.com", "gstatic.com", "googleapis.com",
+  "googleusercontent.com", "ggpht.com",
+];
+
+/** Fetch og:image from article page (best-effort, 4-second timeout, follows redirects) */
 async function fetchOgImage(url: string): Promise<string | undefined> {
   try {
+    // Skip Google News redirect URLs — they never return article OG images
+    if (url.includes("news.google.com")) return undefined;
+
     const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 3000);
+    const tid = setTimeout(() => controller.abort(), 4000);
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; NewsBot/1.0)" },
+      redirect: "follow",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml",
+      },
     });
     clearTimeout(tid);
     if (!res.ok) return undefined;
+
+    // Only parse HTML responses
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("text/html")) return undefined;
+
     const html = await res.text();
-    const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-    return match ? match[1] : undefined;
+
+    // Try og:image first, then twitter:image as fallback
+    const match =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
+
+    if (!match) return undefined;
+
+    const imgUrl = match[1];
+
+    // Filter out blocklisted domains (Google logos, generic CDN images)
+    try {
+      const hostname = new URL(imgUrl).hostname;
+      if (OG_BLOCKLIST.some((blocked) => hostname.includes(blocked))) return undefined;
+    } catch {
+      return undefined;
+    }
+
+    return imgUrl;
   } catch {
     return undefined;
   }
