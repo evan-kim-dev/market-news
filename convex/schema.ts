@@ -25,4 +25,28 @@ export default defineSchema({
     image_url: v.optional(v.string()),
     sub_category: v.optional(v.string()),
   }),
+  naver_popular_stocks: defineTable({
+    rank: v.number(),
+    name: v.string(),
+    rankChange: v.optional(v.string()),
+  }),
+  naver_indices: defineTable({
+    name: v.string(),
+    closePrice: v.string(),
+    compareToPreviousClosePrice: v.string(),
+    fluctuationsRatio: v.string(),
+    accumulatedTradingVolume: v.string(),
+    accumulatedTradingValue: v.string(),
+    individual: v.optional(v.string()),
+    foreign: v.optional(v.string()),
+    institution: v.optional(v.string()),
+  }),
+  stock_charts: defineTable({
+    ticker: v.string(),
+    name: v.string(),
+    prices: v.array(v.number()),
+    timestamps: v.array(v.number()),
+    currentPrice: v.optional(v.number()),
+    changePercent: v.optional(v.number()),
+  }),
 });

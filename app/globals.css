@@ -7,5 +7,20 @@
 }
 
 body {
-  @apply bg-neutral-50 text-neutral-900 dark:bg-[#0a0a0a] dark:text-white transition-colors duration-300;
+  @apply bg-neutral-50 text-neutral-900 dark:bg-[#050505] dark:text-white transition-colors duration-500 antialiased selection:bg-blue-500/30;
+}
+
+/* Custom Webkit Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-neutral-300 dark:bg-neutral-800 rounded-full transition-colors;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-neutral-400 dark:bg-neutral-700;
 }

@@ -1,6 +1,5 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const askBriefingQuestion = action({
   args: {
@@ -9,45 +8,47 @@ export const askBriefingQuestion = action({
     history: v.array(v.object({ role: v.string(), content: v.string() })),
   },
   handler: async (ctx, args) => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Gemini API key is not configured.");
-    }
-    
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    const systemInstruction = `당신은 글로벌/국내 금융 및 경제 시황 분석 전문가 AI 챗봇입니다. 
-아래 제공된 '현재 시황 브리핑 컨텍스트'를 최우선으로 참고하여 사용자의 질문에 심층적이고 전문적이며 통찰력 있는 답변을 제공하십시오.
-모든 답변은 한국어로 작성하며, 필요 시 글머리기호 등 마크다운 형식을 사용하여 가독성을 높여주세요.
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) throw new Error("Gemini API Key missing");
 
-[현재 시황 브리핑 컨텍스트]
-${args.briefingContext}`;
+    const systemPrompt = `You are an elite financial analyst chatbot embedded in a stock market dashboard. 
+Your tone is highly professional, precise, and objective. 
+You must answer questions based on the following today's market briefing:
+---
+${args.briefingContext}
+---
+If the user asks something outside of this context, use your general financial knowledge, but always prioritize the provided briefing. 
+Do not use markdown formatting like bolding or bullet points unless strictly necessary. Keep responses concise (2-4 sentences max).`;
 
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash",
-      systemInstruction: systemInstruction
-    });
-    
-    const contents = [];
-    // Convert history
+    const contents = [
+      { role: "user", parts: [{ text: systemPrompt }] },
+      { role: "model", parts: [{ text: "Understood. I am ready to answer financial questions based on the briefing." }] }
+    ];
+
     for (const msg of args.history) {
-      contents.push({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.content }]
-      });
+      contents.push({ role: msg.role === "user" ? "user" : "model", parts: [{ text: msg.content }] });
     }
     
-    // Add new message
-    contents.push({
-      role: "user",
-      parts: [{ text: args.message }]
-    });
+    contents.push({ role: "user", parts: [{ text: args.message }] });
 
-    const response = await model.generateContent({
-      contents,
-      generationConfig: { temperature: 0.7 }
-    });
+    try {
+      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents })
+      });
 
-    return response.response.text();
-  }
+      if (!geminiRes.ok) {
+        const err = await geminiRes.text();
+        console.error("Gemini Chat Error:", err);
+        throw new Error("Failed to get response from AI");
+      }
+
+      const geminiData = await geminiRes.json();
+      return geminiData.candidates[0].content.parts[0].text;
+    } catch (e) {
+      console.error(e);
+      throw new Error("Internal Server Error");
+    }
+  },
 });
